@@ -1,10 +1,10 @@
 {
-  "currency": "PHP",
+  "company": "BDRS Insurance",
   "last_updated": "April 2026",
   "rates": {
     "labor_hr": 650,
-    "paint_panel": 4500,
-    "detailing": 3000,
-    "insurance_vat": 0.12
+    "paint_per_panel": 4500,
+    "participation_fee_fixed": 3000,
+    "vat_multiplier": 1.12
   }
 }
