@@ -3,96 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PH Auto Claim Estimator</title>
+    <title>BDRS-insurance | Claims Estimator</title>
+    
+    <meta property="og:title" content="BDRS-insurance Claims Estimator">
+    <meta property="og:description" content="Official repair cost calculator for Philippine insurance claims.">
+    <meta property="og:url" content="https://BDRS-insurance.github.io/Claims-info/">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .animate-fade { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body class="bg-slate-100 text-slate-900 min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-md mx-auto my-10 bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200">
-        <div class="bg-blue-700 p-6 text-white text-center">
-            <h1 class="text-xl font-bold uppercase tracking-wide">Repair Estimator</h1>
-            <p class="text-blue-100 text-xs mt-1">Estimated Market Rates - Philippines 2026</p>
+    <div class="max-w-md w-full bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
+        <div class="bg-blue-800 p-8 text-white text-center">
+            <h1 class="text-2xl font-black tracking-tight uppercase">BDRS Insurance</h1>
+            <div class="inline-block bg-blue-600 text-[10px] px-3 py-1 rounded-full mt-2 font-bold tracking-widest">
+                CLAIMS ESTIMATOR v1.0
+            </div>
         </div>
 
         <div class="p-6 space-y-5">
-            <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center">
-                <span class="text-xs font-semibold text-blue-800 uppercase">Live Market Labor:</span>
-                <span id="rate-tag" class="text-lg font-bold text-blue-700">₱0.00/hr</span>
+            <div class="flex justify-between items-center text-sm border-b pb-4">
+                <span class="text-slate-500 font-medium italic">Latest Market Rates:</span>
+                <span id="update-date" class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold underline">Loading...</span>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Repair Hours (Estimated)</label>
-                <input type="number" id="input-hours" value="1" min="0" 
-                    class="w-full border-slate-300 border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
-            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Labor Time (Hours)</label>
+                    <input type="number" id="input-hours" value="1" min="0" 
+                        class="w-full bg-slate-50 border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-0 outline-none transition font-semibold text-lg">
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Number of Panels (Painting)</label>
-                <input type="number" id="input-panels" value="0" min="0" 
-                    class="w-full border-slate-300 border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
-            </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Number of Panels (Paint)</label>
+                    <input type="number" id="input-panels" value="0" min="0" 
+                        class="w-full bg-slate-50 border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-0 outline-none transition font-semibold text-lg">
+                </div>
 
-            <button onclick="runEstimate()" 
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">
-                Calculate Estimate
-            </button>
-
-            <div id="result-box" class="hidden animate-fade-in border-t pt-5">
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between text-slate-500">
-                        <span>Labor Subtotal:</span>
-                        <span id="res-labor">₱0.00</span>
-                    </div>
-                    <div class="flex justify-between text-slate-500">
-                        <span>Painting Subtotal:</span>
-                        <span id="res-paint">₱0.00</span>
-                    </div>
-                    <div class="flex justify-between font-bold text-lg text-slate-800 pt-2 border-t">
-                        <span>Total Claim Estimate:</span>
-                        <span id="res-total" class="text-blue-600">₱0.00</span>
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Participation Fee (Deductible)</label>
+                    <input type="number" id="input-deductible" value="3000" min="0" 
+                        class="w-full bg-slate-50 border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:ring-0 outline-none transition font-semibold text-lg text-red-600">
                 </div>
             </div>
-        </div>
-        
-        <div class="bg-slate-100 p-4 text-[10px] text-center text-slate-400">
-            Note: This is an estimate based on current NCR shop averages. Actual "Casa" rates may be 30-50% higher.
-        </div>
-    </div>
 
-    <script>
-        let marketData = {};
+            <button onclick="calculateClaim()" 
+                class="w-full bg-blue-700 hover:bg-blue-800 text-white font-black py-4 rounded-2xl shadow-lg transition-all active:scale-95 text-lg">
+                GENERATE ESTIMATE
+            </button>
 
-        // 1. Fetch current rates from the JSON file
-        async function loadRates() {
-            try {
-                const response = await fetch('rates.json');
-                const data = await response.json();
-                marketData = data.rates;
-                document.getElementById('rate-tag').innerText = `₱${marketData.labor_hr.toLocaleString()}/hr`;
-            } catch (err) {
-                console.error("Could not load rates, using defaults.");
-                marketData = { labor_hr: 650, paint_panel: 4500 }; // Fallback
-            }
-        }
-
-        // 2. Calculate the total
-        function runEstimate() {
-            const hours = parseFloat(document.getElementById('input-hours').value) || 0;
-            const panels = parseFloat(document.getElementById('input-panels').value) || 0;
-
-            const laborCost = hours * marketData.labor_hr;
-            const paintCost = panels * marketData.paint_panel;
-            const total = laborCost + paintCost;
-
-            // Display
-            document.getElementById('res-labor').innerText = `₱${laborCost.toLocaleString()}`;
-            document.getElementById('res-paint').innerText = `₱${paintCost.toLocaleString()}`;
-            document.getElementById('res-total').innerText = `₱${total.toLocaleString()}`;
-            document.getElementById('result-box').classList.remove('hidden');
-        }
-
-        window.onload = loadRates;
-    </script>
-</body>
-</html>
+            <div id="result-box" class="hidden animate-fade bg-slate-50 p-5 rounded-2xl border-2 border-dashed border-slate-200">
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between text-slate-600">
+                        <span>Labor Cost:</span>
+                        <span id="res-labor" class="font-bold">₱0.00</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                        <span>Painting Cost:</span>
+                        <span id="res-paint" class="font-bold">₱0.00</span>
+                    </div>
+                    <div class="flex justify-between text-red-500 font-medium">
+                        <span>Less: Participation:</span>
+                        <span id="res-deductible">-₱0.00</span>
+                    </div>
+                    <div class="flex justify-between font-black text-xl text-slate-900 pt-3
