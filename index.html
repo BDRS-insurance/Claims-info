@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -21,16 +21,16 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 pb-10">
+<body class="text-slate-900 pb-10">
 
     <nav class="bg-blue-900 text-white sticky top-0 z-50 no-print shadow-lg">
         <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
             <span class="font-black text-xl tracking-tighter uppercase">BDRS-insurance</span>
-            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-xs font-bold transition">PRINT QUOTATION</button>
+            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-xs font-bold transition">PRINT PDF</button>
         </div>
         <div class="flex max-w-4xl mx-auto border-t border-blue-800">
-            <button onclick="showTab('motor')" id="btn-motor" class="flex-1 py-4 text-sm font-bold border-b-4 border-blue-400 bg-blue-800 text-white transition-all">🚗 MOTORCAR</button>
-            <button onclick="showTab('fire')" id="btn-fire" class="flex-1 py-4 text-sm font-bold border-b-4 border-transparent text-blue-300 hover:text-white transition-all">🏠 FIRE / PROPERTY</button>
+            <button onclick="showTab('motor')" id="btn-motor" class="flex-1 py-4 text-sm font-bold border-b-4 border-blue-400 bg-blue-800 text-white">🚗 MOTORCAR</button>
+            <button onclick="showTab('fire')" id="btn-fire" class="flex-1 py-4 text-sm font-bold border-b-4 border-transparent text-blue-300 hover:text-white">🏠 FIRE / PROPERTY</button>
         </div>
     </nav>
 
@@ -46,47 +46,33 @@
                 <div class="space-y-4 no-print">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Vehicle Model</label>
-                        <input type="text" placeholder="e.g. 2026 Toyota Land Cruiser" class="w-full border-2 p-3 rounded-xl outline-none focus:border-blue-600 font-semibold">
+                        <input type="text" placeholder="e.g. 2026 Toyota Fortuner" class="w-full border-2 p-3 rounded-xl outline-none focus:border-blue-600 font-semibold">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Fair Market Value (₱)</label>
                         <input type="text" id="m-fmv-display" value="1,000,000" 
                             class="w-full border-2 border-blue-100 bg-blue-50 p-3 rounded-xl font-black text-2xl text-blue-900 outline-none" 
-                            oninput="formatInput(this); calculateAll();">
+                            oninput="formatAndCalc(this)">
                     </div>
                     
                     <div class="bg-slate-50 p-4 rounded-xl border space-y-3">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-1">Select IC Perils</p>
-                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-od" checked onchange="calculateAll()" class="w-5 h-5 accent-blue-600"> Own Damage & Theft (1.50%)</label>
-                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-aon" checked onchange="calculateAll()" class="w-5 h-5 accent-blue-600"> Acts of Nature / AON (0.50%)</label>
-                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-vtplbi" checked onchange="calculateAll()" class="w-5 h-5 accent-blue-600"> VTPL - Bodily Injury (₱530)</label>
-                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-vtplpd" checked onchange="calculateAll()" class="w-5 h-5 accent-blue-600"> VTPL - Property Damage (₱1,050)</label>
-                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-pa" checked onchange="calculateAll()" class="w-5 h-5 accent-blue-600"> Auto Personal Accident (₱500)</label>
-                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-ebi" onchange="calculateAll()" class="w-5 h-5 accent-blue-600"> Excess Bodily Injury (₱250)</label>
-                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-legal" onchange="calculateAll()" class="w-5 h-5 accent-blue-600"> Legal Assistance (₱150)</label>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-1">Coverages & Perils</p>
+                        <div class="flex items-center gap-3 text-sm font-bold text-blue-700 bg-blue-50 p-2 rounded-lg">
+                            <svg class="w-5 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg>
+                            Own Damage & Theft (1.50%) - Included
+                        </div>
+                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-aon" checked onchange="runCalc()" class="w-5 h-5 accent-blue-600"> Acts of Nature (0.50%)</label>
+                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-vtplbi" checked onchange="runCalc()" class="w-5 h-5 accent-blue-600"> VTPL - Bodily Injury (₱530)</label>
+                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-vtplpd" checked onchange="runCalc()" class="w-5 h-5 accent-blue-600"> VTPL - Property Damage (₱1,050)</label>
+                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-pa" checked onchange="runCalc()" class="w-5 h-5 accent-blue-600"> Personal Accident (₱500)</label>
+                        <label class="flex items-center gap-3 text-sm font-bold cursor-pointer"><input type="checkbox" id="m-ebi" onchange="runCalc()" class="w-5 h-5 accent-blue-600"> Excess Bodily Injury (₱250)</label>
                     </div>
                 </div>
 
                 <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
                     <h3 class="text-xs font-black text-slate-400 uppercase mb-4 border-b pb-2">Computation Summary</h3>
                     <div class="space-y-2 text-sm">
-                        <div class="flex justify-between" id="row-m-od"><span>OD/Theft Premium:</span><span id="res-m-od" class="font-bold">₱0.00</span></div>
-                        <div class="flex justify-between" id="row-m-aon"><span>AON Premium:</span><span id="res-m-aon" class="font-bold">₱0.00</span></div>
-                        <div class="flex justify-between text-slate-500" id="row-m-vtplbi"><span>VTPL - Bodily Injury:</span><span id="res-m-vtplbi">₱0.00</span></div>
-                        <div class="flex justify-between text-slate-500" id="row-m-vtplpd"><span>VTPL - Property Damage:</span><span id="res-m-vtplpd">₱0.00</span></div>
-                        <div class="flex justify-between text-slate-500" id="row-m-pa"><span>Auto Personal Accident:</span><span id="res-m-pa">₱0.00</span></div>
-                        <div class="flex justify-between text-slate-500" id="row-m-ebi"><span>Excess Bodily Injury:</span><span id="res-m-ebi">₱0.00</span></div>
-                        <div class="flex justify-between text-slate-500" id="row-m-legal"><span>Legal Assistance:</span><span id="res-m-legal">₱0.00</span></div>
-                        
-                        <div class="pt-4 border-t-2 border-slate-200 mt-2 space-y-1 text-xs text-slate-500 font-medium">
-                            <div class="flex justify-between font-bold text-slate-800 text-sm mb-1"><span>Net Premium:</span><span id="res-m-net">₱0.00</span></div>
-                            <div class="flex justify-between"><span>VAT (12%):</span><span id="res-m-vat">₱0.00</span></div>
-                            <div class="flex justify-between"><span>Doc Stamp (12.5%):</span><span id="res-m-dst">₱0.00</span></div>
-                            <div class="flex justify-between"><span>Local Gov Tax (0.2%):</span><span id="res-m-lgt">₱0.00</span></div>
-                        </div>
-                    </div>
-                    <div class="mt-6 bg-blue-900 text-white p-5 rounded-xl text-center shadow-lg">
-                        <p class="text-[10px] font-bold text-blue-300 uppercase mb-1">Total Amount Due</p>
-                        <h2 id="res-m-total" class="text-3xl font-black">₱0.00</h2>
-                    </div>
-                </div>
+                        <div class="flex justify-between font-bold" id="row-m-od"><span>Own Damage/Theft:</span><span id="res-m-od">₱0.00</span></div>
+                        <div class="flex justify-between" id="row-m-aon"><span>Acts of Nature:</span><span id="res-m-aon">₱0.00</span></div>
+                        <div class="flex justify-between text-slate-600" id="row-m-vtplbi"><span>VTPL - BI:</span><span id="res-m-vtplbi">₱0.00</span></div>
+                        <div class="flex justify-between text-slate-600" id="row-m-vtplpd"><span>VTPL - PD:</span><span id="res-m-vtplpd">₱
