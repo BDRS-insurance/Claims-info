@@ -22,6 +22,12 @@
             .bg-slate-900 { background-color: #0f172a !important; color: white !important; }
             .bg-blue-600 { background-color: #2563eb !important; color: white !important; }
             .print-only-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
+            
+            /* Print styling for the comparison table */
+            .comparison-table th { background-color: #f8fafc !important; color: #334155 !important; border-bottom: 2px solid #cbd5e1 !important; }
+            .comparison-table td { border-bottom: 1px solid #e2e8f0 !important; }
+            .highlight-row { background-color: #eff6ff !important; font-weight: bold !important; border-left: 4px solid #2563eb !important; }
+            
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
         .print-only-header { display: none; }
@@ -91,11 +97,11 @@
 
                     <div class="no-print">
                         <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Internal Notes / Warranties</label>
-                        <textarea id="m-notes" placeholder="Type here (e.g. Free 24/7 Roadside Assistance...)" class="w-full border-2 border-slate-100 p-4 rounded-2xl text-sm italic h-24 resize-none outline-none focus:border-blue-300 transition-all"></textarea>
+                        <textarea id="m-notes" oninput="updatePrintHeader()" placeholder="Type here (e.g. Free 24/7 Roadside Assistance...)" class="w-full border-2 border-slate-100 p-4 rounded-2xl text-sm italic h-24 resize-none outline-none focus:border-blue-300 transition-all"></textarea>
                     </div>
                 </div>
 
-                <div class="bg-slate-900 text-white p-8 rounded-3xl flex flex-col justify-between shadow-2xl">
+                <div class="bg-slate-900 text-white p-8 rounded-3xl flex flex-col justify-between shadow-2xl h-full">
                     <div>
                         <h3 class="text-[11px] font-black text-blue-400 uppercase mb-6 tracking-widest border-b border-slate-800 pb-2">Computation Summary</h3>
                         <div class="space-y-4 text-sm">
@@ -110,13 +116,31 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-10 bg-blue-600 p-6 rounded-2xl text-center">
+                    <div class="mt-8 bg-blue-600 p-6 rounded-2xl text-center">
                         <p class="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1">Total Amount Due</p>
                         <h2 id="res-m-total" class="text-4xl font-black tracking-tight text-white">₱0.00</h2>
                     </div>
                 </div>
             </div>
-            <div id="print-m-notes" class="hidden print:block px-8 pb-8 text-xs text-slate-500 italic border-t pt-4 mt-4"></div>
+            
+            <div class="px-8 pb-4">
+                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Market Comparison Estimate</h3>
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-sm comparison-table">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                            <tr>
+                                <th class="px-4 py-3 font-bold">Insurance Provider</th>
+                                <th class="px-4 py-3 font-bold text-right">Est. Premium</th>
+                                <th class="px-4 py-3 font-bold text-center">Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="m-comparison-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="print-m-notes" class="hidden print:block px-8 pb-8 text-xs text-slate-500 italic border-t border-slate-100 pt-4 mt-4"></div>
         </div>
 
         <div id="fire-tab" class="tab-content bg-white rounded-3xl shadow-2xl border border-slate-200 glass-card overflow-hidden">
@@ -160,10 +184,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-10 bg-orange-700 p-6 rounded-2xl text-center">
+                    <div class="mt-8 bg-orange-700 p-6 rounded-2xl text-center">
                         <p class="text-[10px] font-black text-orange-200 uppercase tracking-widest mb-1">Total Amount Due</p>
                         <h2 id="res-f-total" class="text-4xl font-black">₱0.00</h2>
                     </div>
+                </div>
+            </div>
+
+            <div class="px-8 pb-8">
+                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Market Comparison Estimate</h3>
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-sm comparison-table">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                            <tr>
+                                <th class="px-4 py-3 font-bold">Insurance Provider</th>
+                                <th class="px-4 py-3 font-bold text-right">Est. Premium</th>
+                                <th class="px-4 py-3 font-bold text-center">Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="f-comparison-body">
+                            </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -177,11 +218,28 @@
     <script>
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' });
 
-        function updatePrintHeader(val) {
+        // Competitor multipliers based on general market positioning
+        const competitors = [
+            { name: "Pacific Cross", multiplier: 1.05 }, // Slightly higher premium
+            { name: "Pioneer Insurance", multiplier: 0.98 }, // Slightly aggressive
+            { name: "Paramount Life & General", multiplier: 1.02 },
+            { name: "Asia Philippines", multiplier: 1.04 },
+            { name: "Bethel General", multiplier: 1.03 },
+            { name: "MAAGAP", multiplier: 0.96 } // Usually competitive
+        ];
+
+        function updatePrintHeader() {
+            const activeTab = document.querySelector('.tab-content.active').id;
+            const inputVal = activeTab === 'motor-tab' 
+                ? document.getElementById('m-details').value 
+                : document.getElementById('f-details').value;
+            
             const header = document.getElementById('print-subject');
-            header.innerText = val ? val : "Official Quotation";
-            // Also sync notes to print area
-            document.getElementById('print-m-notes').innerText = document.getElementById('m-notes').value;
+            header.innerText = inputVal ? inputVal : "Official Quotation";
+            
+            if(activeTab === 'motor-tab'){
+                document.getElementById('print-m-notes').innerText = document.getElementById('m-notes').value;
+            }
         }
 
         function showTab(type) {
@@ -193,12 +251,11 @@
             if(type === 'motor') {
                 document.getElementById('motor-tab').classList.add('active');
                 document.getElementById('btn-motor').className = "flex-1 py-4 text-xs font-black tracking-widest border-b-4 border-blue-400 bg-blue-900 text-white transition-all uppercase";
-                updatePrintHeader(document.getElementById('m-details').value);
             } else {
                 document.getElementById('fire-tab').classList.add('active');
                 document.getElementById('btn-fire').className = "flex-1 py-4 text-xs font-black tracking-widest border-b-4 border-blue-400 bg-blue-900 text-white transition-all uppercase";
-                updatePrintHeader(document.getElementById('f-details').value);
             }
+            updatePrintHeader();
             calculateAll();
         }
 
@@ -211,12 +268,37 @@
 
         const format = (n) => "₱" + n.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
+        function renderComparisonTable(tbodyId, bdrsTotal) {
+            if (bdrsTotal === 0) return;
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = "";
+
+            // Add BDRS to the top of the list
+            let rows = `<tr class="highlight-row bg-blue-50">
+                <td class="px-4 py-3 text-blue-900">BDRS-insurance (Selected)</td>
+                <td class="px-4 py-3 text-right text-blue-900">${format(bdrsTotal)}</td>
+                <td class="px-4 py-3 text-center text-blue-600">-</td>
+            </tr>`;
+
+            competitors.forEach(comp => {
+                const compTotal = bdrsTotal * comp.multiplier;
+                const diff = compTotal - bdrsTotal;
+                const diffFmt = diff > 0 ? `+${format(diff)}` : format(diff);
+                const diffColor = diff > 0 ? "text-red-500" : "text-green-600 font-bold";
+
+                rows += `<tr class="border-t border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td class="px-4 py-3 font-semibold text-slate-700">${comp.name}</td>
+                    <td class="px-4 py-3 text-right font-medium text-slate-600">${format(compTotal)}</td>
+                    <td class="px-4 py-3 text-center text-xs ${diffColor}">${diffFmt}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+
         function calculateAll() {
             // MOTOR
             const fmvInput = document.getElementById('m-fmv').value.replace(/,/g, '');
             const fmv = parseFloat(fmvInput) || 0;
-            
-            // Standard IC Deductible logic: 0.5% of FMV or Min 2,000
             const deductible = Math.max(fmv * 0.005, 2000);
             document.getElementById('m-deductible-display').innerText = format(deductible);
 
@@ -228,6 +310,7 @@
 
             const mNet = mOD + mAON + mBI + mPD + mPA;
             const mTaxes = mNet * (0.12 + 0.125 + 0.002);
+            const mTotal = mNet + mTaxes;
 
             document.getElementById('res-m-od').innerText = format(mOD);
             document.getElementById('res-m-aon').innerText = format(mAON);
@@ -235,7 +318,8 @@
             document.getElementById('res-m-pa').innerText = format(mPA);
             document.getElementById('res-m-net').innerText = format(mNet);
             document.getElementById('res-m-taxes').innerText = format(mTaxes);
-            document.getElementById('res-m-total').innerText = format(mNet + mTaxes);
+            document.getElementById('res-m-total').innerText = format(mTotal);
+            renderComparisonTable('m-comparison-body', mTotal);
 
             // FIRE
             const tsiInput = document.getElementById('f-tsi').value.replace(/,/g, '');
@@ -248,6 +332,7 @@
             const fNet = fBase + fEQ + fTY + fRSM;
             const fFst = fNet * 0.02;
             const fGovTaxes = fNet * (0.12 + 0.125 + 0.002);
+            const fTotal = fNet + fFst + fGovTaxes;
 
             document.getElementById('res-f-fire').innerText = format(fBase);
             document.getElementById('res-f-eq').innerText = format(fEQ);
@@ -255,10 +340,10 @@
             document.getElementById('res-f-rsm').innerText = format(fRSM);
             document.getElementById('res-f-net').innerText = format(fNet);
             document.getElementById('res-f-taxes').innerText = format(fFst + fGovTaxes);
-            document.getElementById('res-f-total').innerText = format(fNet + fFst + fGovTaxes);
+            document.getElementById('res-f-total').innerText = format(fTotal);
+            renderComparisonTable('f-comparison-body', fTotal);
             
-            // Sync notes to print
-            document.getElementById('print-m-notes').innerText = document.getElementById('m-notes').value;
+            updatePrintHeader();
         }
 
         window.onload = calculateAll;
